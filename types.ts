@@ -19,6 +19,9 @@ export interface SavedSummary {
   content: string;
   createdAt: number;
   tags: string[];
+  instructor?: string; // New field
+  notes?: string;      // New field
+  videoUrl?: string;   // New field: Link to the specific training video
 }
 
 export enum AppView {
@@ -27,7 +30,15 @@ export enum AppView {
   PLAYER = 'PLAYER',
   LIBRARY = 'LIBRARY',
   PROFILE = 'PROFILE',
-  GRADUATION = 'GRADUATION'
+  GRADUATION = 'GRADUATION',
+  ROUTINE = 'ROUTINE', // New view for 6-Step Routine
+  MARKET_REPORT = 'MARKET_REPORT', // New view for Market Updates
+  LANDING = 'LANDING'
+}
+
+export interface ModuleProgress {
+  slides: boolean;
+  video: boolean;
 }
 
 export interface UserProfile {
@@ -35,6 +46,51 @@ export interface UserProfile {
   friendlyName: string;
   memberLevel: string;
   completedModules: string[]; // Array of CourseModule IDs
+  moduleProgress?: Record<string, ModuleProgress>; // Track partial completion
+  apiKeys?: {
+    tradier?: string;
+  };
+}
+
+export interface StockFundamentalAnalysis {
+  id: string;
+  symbol: string;
+  name: string;
+  dateAdded: string;
+  
+  // OA Criteria
+  overview: string;
+  avgVolume: string; // Target: > 1M
+  institutionalOwnership: string; // Target: > 50%
+  earningsDate: string;
+  range52Week: string;
+  
+  // Financial Health & Valuation (New)
+  debtToEquity: string;
+  peRatio: string;
+  dividend: string;
+  intrinsicValue: string;
+  analystTargetPrice: string; // New field
+
+  // Management Performance (New)
+  management: {
+    roic: string;
+    roa: string;
+    roe: string;
+  };
+  
+  // Growth Trends
+  growth: {
+    currentQtr: string;
+    nextQtr: string;
+    currentYear: string;
+    nextYear: string;
+    next5Years: string;
+    past5Years: string;
+    industryAvg: string;
+  };
+
+  notes: string;
 }
 
 export interface TradingPlan {

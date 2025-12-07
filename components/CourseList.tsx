@@ -37,6 +37,11 @@ const CourseList: React.FC<CourseListProps> = ({
     }
   };
 
+  const handleWatchClick = (course: CourseModule, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelectCourse(course);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && selectedCourseRef.current) {
@@ -109,7 +114,10 @@ const CourseList: React.FC<CourseListProps> = ({
                   
                   <div className="flex gap-2">
                     <div className="flex-1 relative group/tooltip">
-                      <button className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                      <button 
+                        onClick={(e) => handleWatchClick(course, e)}
+                        className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -118,7 +126,7 @@ const CourseList: React.FC<CourseListProps> = ({
                       </button>
                       {/* Tooltip */}
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-48 p-2 bg-slate-900 text-slate-200 text-xs rounded-lg border border-slate-700 shadow-xl z-50 text-center pointer-events-none animate-in fade-in zoom-in duration-200">
-                        Generate AI summary from video transcript
+                        Paste video URL to generate AI summary
                         <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
                       </div>
                     </div>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 
@@ -22,7 +23,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         username: username || 'trader@optionsanimal.com',
         friendlyName: friendlyName || username.split('@')[0] || 'Trader',
         memberLevel: 'Lifetime Access',
-        completedModules: [] // Start with empty progress
+        completedModules: [], // Start with empty progress
+        moduleProgress: {}
       });
     }, 1500);
   };
@@ -36,7 +38,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         username: 'alex.trader@gmail.com',
         friendlyName: 'Alex',
         memberLevel: 'Lifetime Access',
-        completedModules: []
+        completedModules: [],
+        moduleProgress: {}
       });
     }, 1500);
   };

@@ -1,17 +1,36 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface SummaryViewProps {
   content: string;
   isLoading: boolean;
+  loadingMessage?: string; // New prop for custom status
   onClose: () => void;
-  onSave: () => void;
+  onSave: (instructor: string, notes: string) => void;
   isSaved: boolean;
+  initialInstructor?: string;
+  initialNotes?: string;
+  videoUrl?: string;
 }
 
-const SummaryView: React.FC<SummaryViewProps> = ({ content, isLoading, onClose, onSave, isSaved }) => {
+const SummaryView: React.FC<SummaryViewProps> = ({ 
+  content, 
+  isLoading, 
+  loadingMessage = "Analyzing training module...", // Default message
+  onClose, 
+  onSave, 
+  isSaved,
+  initialInstructor = '',
+  initialNotes = '',
+  videoUrl
+}) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+  
+  // Metadata State
+  const [instructor, setInstructor] = useState(initialInstructor);
+  const [notes, setNotes] = useState(initialNotes);
 
   useEffect(() => {
     // Cleanup speech on unmount or close
@@ -19,6 +38,12 @@ const SummaryView: React.FC<SummaryViewProps> = ({ content, isLoading, onClose, 
       window.speechSynthesis.cancel();
     };
   }, []);
+
+  // Update local state if props change (e.g. viewing different summary)
+  useEffect(() => {
+    setInstructor(initialInstructor);
+    setNotes(initialNotes);
+  }, [initialInstructor, initialNotes]);
 
   const toggleSpeech = () => {
     if (isSpeaking) {
@@ -44,12 +69,16 @@ const SummaryView: React.FC<SummaryViewProps> = ({ content, isLoading, onClose, 
     }
   };
 
+  const handleSaveClick = () => {
+    onSave(instructor, notes);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-4xl bg-[#1e293b] rounded-2xl shadow-2xl flex flex-col max-h-[90vh] border border-slate-700">
         
         {/* Header */}
-        <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-[#0f172a] rounded-t-2xl">
+        <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-[#0f172a] rounded-t-2xl shrink-0">
           <div className="flex items-center gap-3">
              <div className="h-10 w-10 bg-indigo-500/20 rounded-full flex items-center justify-center text-indigo-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,35 +135,82 @@ const SummaryView: React.FC<SummaryViewProps> = ({ content, isLoading, onClose, 
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#1e293b]">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#1e293b] p-0">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-64 space-y-4">
-              <div className="relative h-16 w-16">
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px] space-y-6">
+              <div className="relative h-20 w-20">
                  <div className="absolute inset-0 border-4 border-indigo-500/30 rounded-full"></div>
                  <div className="absolute inset-0 border-4 border-t-indigo-500 rounded-full animate-spin"></div>
               </div>
-              <p className="text-indigo-300 font-medium animate-pulse">Analyzing training module...</p>
-              <p className="text-slate-500 text-sm">Extracting strategies, risks, and mechanics.</p>
+              <div className="text-center px-8">
+                <p className="text-indigo-300 font-bold text-lg animate-pulse mb-2">{loadingMessage}</p>
+                <p className="text-slate-500 text-sm">Please wait while Gemini processes the material.</p>
+              </div>
             </div>
           ) : (
-            <div className="prose prose-invert prose-slate max-w-none">
-              <ReactMarkdown 
-                components={{
-                  h2: ({node, ...props}) => <h2 className="text-2xl font-bold text-indigo-400 border-b border-slate-700 pb-2 mt-8 mb-4" {...props} />,
-                  ul: ({node, ...props}) => <ul className="list-disc list-outside ml-6 space-y-2 text-slate-300" {...props} />,
-                  li: ({node, ...props}) => <li className="pl-1" {...props} />,
-                  strong: ({node, ...props}) => <strong className="text-white font-semibold" {...props} />,
-                  p: ({node, ...props}) => <p className="leading-relaxed text-slate-300 mb-4" {...props} />
-                }}
-              >
-                {content}
-              </ReactMarkdown>
-            </div>
+            <>
+               {/* Video Source Link */}
+               {videoUrl && (
+                  <div className="bg-slate-900/50 px-6 py-2 border-b border-slate-700 flex items-center gap-2 text-xs text-slate-400">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 shrink-0 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                       <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                     </svg>
+                     <span className="truncate max-w-2xl font-mono text-blue-300/80">{videoUrl}</span>
+                  </div>
+               )}
+
+               {/* Session Details Form */}
+               <div className="bg-slate-800/50 border-b border-slate-700 p-6">
+                  <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Session Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-400 mb-1">Instructor</label>
+                      <input 
+                        type="text" 
+                        value={instructor}
+                        onChange={(e) => setInstructor(e.target.value)}
+                        placeholder="e.g. Greg Richards"
+                        className="w-full bg-[#0f172a] border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-400 mb-1">Personal Notes / Description</label>
+                      <input 
+                        type="text"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="e.g. Discussed the new adjustment rules for bullish reversals..."
+                        className="w-full bg-[#0f172a] border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+               </div>
+
+               {/* Markdown Content */}
+               <div className="p-8 prose prose-invert prose-slate max-w-none">
+                <ReactMarkdown 
+                  components={{
+                    h2: ({node, ...props}) => <h2 className="text-2xl font-bold text-indigo-400 border-b border-slate-700 pb-2 mt-8 mb-4" {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc list-outside ml-6 space-y-2 text-slate-300" {...props} />,
+                    li: ({node, ...props}) => <li className="pl-1" {...props} />,
+                    strong: ({node, ...props}) => <strong className="text-white font-semibold" {...props} />,
+                    p: ({node, ...props}) => <p className="leading-relaxed text-slate-300 mb-4" {...props} />
+                  }}
+                >
+                  {content}
+                </ReactMarkdown>
+              </div>
+            </>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-700 bg-[#0f172a] rounded-b-2xl flex justify-end gap-3">
+        <div className="p-4 border-t border-slate-700 bg-[#0f172a] rounded-b-2xl flex justify-end gap-3 shrink-0">
           <button 
             onClick={() => {
               window.speechSynthesis.cancel();
@@ -146,11 +222,11 @@ const SummaryView: React.FC<SummaryViewProps> = ({ content, isLoading, onClose, 
           </button>
           {!isLoading && (
             <button 
-              onClick={onSave}
+              onClick={handleSaveClick}
               disabled={isSaved}
               className={`px-5 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${
                 isSaved 
-                  ? 'bg-green-600/20 text-green-400 cursor-default'
+                  ? 'bg-green-600/20 text-green-400 cursor-default border border-green-600/30'
                   : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/50'
               }`}
             >
@@ -159,7 +235,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({ content, isLoading, onClose, 
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
-                  Saved to Library
+                  Updates Saved
                 </>
               ) : (
                 <>
